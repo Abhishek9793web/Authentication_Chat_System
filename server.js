@@ -10,6 +10,8 @@ const dotenv = require('dotenv');
 // Import Socket.IO
 const { Server } = require('socket.io');
 
+// Import CORS
+const cors = require('cors');
 
 // ==========================================
 // IMPORT DATABASE CONNECTION
@@ -63,13 +65,16 @@ const server = http.createServer(app);
 const io = new Server(server, {
 
   cors: {
-    // Change this to your frontend URL
-    // when you connect your React application
-    origin: '*',
+     // Allow React frontend
+    origin: 'http://localhost:5173',
 
+    // Allow these methods
     methods: [
       'GET',
-      'POST'
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE'
     ]
   }
 
@@ -94,6 +99,32 @@ app.set('io', io);
 // ==========================================
 
 connectDB();
+
+// ==========================================
+// CORS MIDDLEWARE
+// ==========================================
+
+// Allow React frontend to communicate
+// with Node.js backend
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE'
+    ],
+
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization'
+    ]
+  })
+);
 
 
 // ==========================================
