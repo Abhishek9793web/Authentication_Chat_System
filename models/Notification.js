@@ -1,58 +1,90 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 
-// Create Notification Schema
+// ==========================================
+// NOTIFICATION SCHEMA
+// ==========================================
+
 const notificationSchema = new mongoose.Schema(
   {
-    // User who sent the message
+    // ========================================
+    // USER WHO SENT THE MESSAGE
+    // ========================================
+
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      ref: "User",
+      required: true,
     },
 
-    // User who should receive the notification
+
+    // ========================================
+    // USER WHO RECEIVES THE NOTIFICATION
+    // ========================================
+
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      ref: "User",
+      required: true,
     },
 
-    // Conversation where the message was sent
+
+    // ========================================
+    // CONVERSATION
+    // ========================================
+
     conversation: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Conversation',
-      required: true
+      ref: "Conversation",
+      required: true,
     },
 
-    // Message that caused the notification
+
+    // ========================================
+    // MESSAGE THAT CREATED NOTIFICATION
+    // ========================================
+
     message: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Message',
-      required: true
+      ref: "Message",
+      required: true,
     },
 
-    // Whether the notification has been read
+
+    // ========================================
+    // READ STATUS
+    // ========================================
+
     isRead: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
+
   // Automatically creates:
+  //
   // createdAt
   // updatedAt
+
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
 
-// Create Notification Model
+// ==========================================
+// CREATE MODEL
+// ==========================================
+
 const Notification = mongoose.model(
-  'Notification',
+  "Notification",
   notificationSchema
 );
 
+
+// ==========================================
+// EXPORT MODEL
+// ==========================================
 
 module.exports = Notification;

@@ -1,133 +1,99 @@
-const Notification =
-  require('../models/Notification');
+const Notification = require("../models/Notification");
 
 
 // ==========================================
-// CREATE NOTIFICATIONS
+// CREATE NOTIFICATION
 // ==========================================
 
-const createMessageNotifications = async ({
-  io,
+const createNotification = async ({
   senderId,
+  receiverId,
   conversationId,
   messageId,
-  participants
 }) => {
 
   try {
 
-    // Get Socket.IO room name
-    const roomName =
-      `conversation_${conversationId}`;
+    // ========================================
+    // DON'T NOTIFY THE SENDER
+    // ========================================
 
+    // This is an extra safety check.
+    // The sender should never receive
+    // a notification for their own message.
 
-    // Get all sockets currently
-    // connected to this conversation room
-    const socketsInRoom =
-      await io.in(roomName).fetchSockets();
-
-
-    // Get socket IDs
-    const activeSocketIds =
-      socketsInRoom.map(
-        socket => socket.id
-      );
-
-
-    console.log(
-      'Active sockets:',
-      activeSocketIds
-    );
-
-
-    // Create notifications
-    for (
-      const participantId
-      of participants
+    if (
+      senderId.toString() ===
+      receiverId.toString()
     ) {
 
-      // Don't notify sender
-      if (
-        participantId.toString() ===
-        senderId.toString()
-      ) {
-        continue;
-      }
+      console.log(
+        "Notification skipped: sender and receiver are the same user."
+      );
+
+      return null;
+
+    }
 
 
-      // IMPORTANT:
-      //
-      // Here we need to know which user
-      // belongs to which socket.
-      //
-      // We will solve this by storing
-      // userId on the socket.
+    // ========================================
+    // CREATE NOTIFICATION
+    // ========================================
 
-
-      const receiverIsActive =
-        socketsInRoom.some(
-          socket =>
-            socket.userId &&
-            socket.userId.toString() ===
-            participantId.toString()
-        );
-
-
-      // If receiver is currently
-      // viewing the conversation
-      // don't create notification
-      if (receiverIsActive) {
-
-        console.log(
-          `User ${participantId} is active.`
-        );
-
-        continue;
-
-      }
-
-
-      // Create notification
+    const notification =
       await Notification.create({
 
-        sender:
-          senderId,
+        // User who sent the message
+        sender: senderId,
 
-        receiver:
-          participantId,
+        // User who should receive notification
+        receiver: receiverId,
 
-        conversation:
-          conversationId,
+        // Conversation where message was sent
+        conversation: conversationId,
 
-        message:
-          messageId,
+        // Message that caused notification
+        message: messageId,
 
-        isRead:
-          false
+        // New notification is unread
+        isRead: false,
 
       });
 
 
-      console.log(
-        `Notification created for ${participantId}`
-      );
+    console.log(
+      "Notification created:",
+      notification._id
+    );
 
-    }
+
+    // Return notification
+
+    return notification;
+
 
   } catch (error) {
 
     console.error(
-      'Notification creation error:',
+      "Create notification error:",
       error
     );
 
-    throw error;
+
+    // Return null instead of breaking
+    // the main message functionality.
+
+    return null;
 
   }
 
 };
 
 
+// ==========================================
+// EXPORT SERVICE
+// ==========================================
+
 module.exports = {
-  createMessageNotifications
+  createNotification,
 };

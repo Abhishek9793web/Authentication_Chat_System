@@ -1,35 +1,41 @@
-const express = require('express');
+const express = require("express");
 
-const router =
-  express.Router();
-
-
-// Existing authentication middleware
-const authenticateToken =
-  require('../middleware/authMiddleware');
+// Create router
+const router = express.Router();
 
 
-// Notification controllers
+// ==========================================
+// AUTHENTICATION MIDDLEWARE
+// ==========================================
+
+// We use your existing JWT middleware.
+// This makes sure only logged-in users
+// can access notification APIs.
+
+const authMiddleware =
+  require("../middleware/authMiddleware");
+
+
+// ==========================================
+// NOTIFICATION CONTROLLER
+// ==========================================
+
 const {
-
   getNotifications,
-
-  markNotificationAsRead
-
-} = require(
-  '../controllers/notificationController'
-);
+  markNotificationAsRead,
+} = require("../controllers/notificationController");
 
 
 // ==========================================
 // GET ALL NOTIFICATIONS
+// GET /api/notifications
 // ==========================================
 
 router.get(
 
-  '/notifications',
+  "/notifications",
 
-  authenticateToken,
+  authMiddleware,
 
   getNotifications
 
@@ -38,17 +44,22 @@ router.get(
 
 // ==========================================
 // MARK NOTIFICATION AS READ
+// PATCH /api/notifications/:id/read
 // ==========================================
 
 router.patch(
 
-  '/notifications/:id/read',
+  "/notifications/:id/read",
 
-  authenticateToken,
+  authMiddleware,
 
   markNotificationAsRead
 
 );
 
+
+// ==========================================
+// EXPORT ROUTER
+// ==========================================
 
 module.exports = router;

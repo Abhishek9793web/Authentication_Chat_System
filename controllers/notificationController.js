@@ -1,8 +1,8 @@
-const Notification = require('../models/Notification');
+const Notification = require("../models/Notification");
 
 
 // ==========================================
-// GET ALL MY NOTIFICATIONS
+// GET ALL NOTIFICATIONS
 // GET /api/notifications
 // ==========================================
 
@@ -10,38 +10,67 @@ const getNotifications = async (req, res) => {
 
   try {
 
-    // Get logged-in user's ID
-    const userId = req.user.id;
+    // ========================================
+    // GET LOGGED-IN USER ID
+    // ========================================
+
+    // Your authentication middleware should
+    // provide the logged-in user in req.user
+
+    const userId =
+      req.user._id || req.user.id;
 
 
-    // Find notifications
-    // belonging to this user
+    // ========================================
+    // FIND USER NOTIFICATIONS
+    // ========================================
+
     const notifications =
       await Notification.find({
-        receiver: userId
+
+        // Only get notifications
+        // belonging to logged-in user
+
+        receiver: userId,
+
       })
+
+      // Get sender information
+
       .populate(
-        'sender',
-        'name email'
+        "sender",
+        "name email"
       )
+
+      // Get conversation information
+
       .populate(
-        'conversation'
+        "conversation"
       )
+
+      // Get message information
+
       .populate(
-        'message'
+        "message"
       )
+
+      // Newest notifications first
+
       .sort({
-        createdAt: -1
+        createdAt: -1,
       });
 
 
-    // Return notifications
+    // ========================================
+    // SEND RESPONSE
+    // ========================================
+
     return res.status(200).json({
 
       message:
-        'Notifications fetched successfully',
+        "Notifications fetched successfully",
 
-      notifications
+      notifications,
 
     });
 
@@ -49,7 +78,7 @@ const getNotifications = async (req, res) => {
   } catch (error) {
 
     console.error(
-      'Get notifications error:',
+      "Get notifications error:",
       error
     );
 
@@ -57,13 +86,17 @@ const getNotifications = async (req, res) => {
     return res.status(500).json({
 
       message:
-        'Something went wrong'
+        "Failed to fetch notifications",
+
+      error:
+        error.message,
 
     });
 
   }
 
 };
+
 
 
 // ==========================================
@@ -71,99 +104,124 @@ const getNotifications = async (req, res) => {
 // PATCH /api/notifications/:id/read
 // ==========================================
 
-const markNotificationAsRead = async (
-  req,
-  res
-) => {
+const markNotificationAsRead =
+  async (req, res) => {
 
-  try {
+    try {
 
-    // Get notification ID
-    const {
-      id
-    } = req.params;
+      // ========================================
+      // GET USER AND NOTIFICATION IDs
+      // ========================================
 
-
-    // Get logged-in user
-    const userId =
-      req.user.id;
+      const userId =
+        req.user._id || req.user.id;
 
 
-    // Find notification
-    //
-    // IMPORTANT:
-    // receiver must be current user
-    //
-    // This prevents User A from marking
-    // User B's notification as read
-    const notification =
-      await Notification.findOne({
+      const notificationId =
+        req.params.id;
 
-        _id:
-          id,
 
-        receiver:
-          userId
+      // ========================================
+      // FIND NOTIFICATION
+      // ========================================
+
+      // IMPORTANT:
+      //
+      // We check both:
+      //
+      // 1. Notification ID
+      // 2. Receiver ID
+      //
+      // This prevents one user from marking
+      // another user's notification as read.
+
+      const notification =
+        await Notification.findOne({
+
+          _id:
+            notificationId,
+
+          receiver:
+            userId,
+
+        });
+
+
+      // ========================================
+      // NOTIFICATION NOT FOUND
+      // ========================================
+
+      if (!notification) {
+
+        return res.status(404).json({
+
+          message:
+            "Notification not found",
+
+        });
+
+      }
+
+
+      // ========================================
+      // MARK AS READ
+      // ========================================
+
+      notification.isRead =
+        true;
+
+
+      // Save changes
+
+      await notification.save();
+
+
+      // ========================================
+      // SEND RESPONSE
+      // ========================================
+
+      return res.status(200).json({
+
+        message:
+          "Notification marked as read",
+
+        notification,
 
       });
 
 
-    // Notification not found
-    if (!notification) {
+    } catch (error) {
 
-      return res.status(404).json({
+      console.error(
+        "Mark notification as read error:",
+        error
+      );
+
+
+      return res.status(500).json({
 
         message:
-          'Notification not found'
+          "Failed to mark notification as read",
+
+        error:
+          error.message,
 
       });
 
     }
 
-
-    // Mark as read
-    notification.isRead = true;
+  };
 
 
-    // Save changes
-    await notification.save();
 
-
-    // Return response
-    return res.status(200).json({
-
-      message:
-        'Notification marked as read',
-
-      notification
-
-    });
-
-
-  } catch (error) {
-
-    console.error(
-      'Mark notification error:',
-      error
-    );
-
-
-    return res.status(500).json({
-
-      message:
-        'Something went wrong'
-
-    });
-
-  }
-
-};
-
+// ==========================================
+// EXPORT CONTROLLERS
+// ==========================================
 
 module.exports = {
 
   getNotifications,
 
-  markNotificationAsRead
+  markNotificationAsRead,
 
 };

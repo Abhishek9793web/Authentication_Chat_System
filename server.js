@@ -151,16 +151,6 @@ app.use(express.json());
 app.use('/api', authRoutes);
 
 
-// Chat APIs
-//
-// POST /api/conversations
-// POST /api/conversations/:id/participants
-// GET  /api/conversations
-// POST /api/conversations/:id/messages
-// GET  /api/conversations/:id/messages
-app.use('/api', chatRoutes);
-
-
 
 // ==========================================
 // USER ROUTES
@@ -170,6 +160,19 @@ app.use(
   '/api',
   userRoutes
 );
+
+
+// Chat APIs
+
+// POST /api/conversations
+// POST /api/conversations/:id/participants
+// GET  /api/conversations
+// POST /api/conversations/:id/messages
+// GET  /api/conversations/:id/messages
+app.use('/api', chatRoutes);
+
+
+
 
 
 
