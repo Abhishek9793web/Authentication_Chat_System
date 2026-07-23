@@ -2,7 +2,117 @@ const Notification = require("../models/Notification");
 
 
 // ==========================================
-// CREATE NOTIFICATION
+// CREATE MESSAGE NOTIFICATIONS
+// ==========================================
+
+const createMessageNotifications = async ({
+  senderId,
+  conversationId,
+  messageId,
+  receiverIds,
+}) => {
+
+  try {
+
+    // Make sure receiverIds is an array
+
+    if (!Array.isArray(receiverIds)) {
+
+      console.log(
+        "No receiver IDs provided for notification."
+      );
+
+      return [];
+
+    }
+
+
+    // ========================================
+    // REMOVE SENDER FROM RECEIVERS
+    // ========================================
+
+    // The sender should never receive
+    // a notification for their own message.
+
+    const filteredReceiverIds =
+      receiverIds.filter(
+
+        (receiverId) =>
+
+          receiverId.toString() !==
+          senderId.toString()
+
+      );
+
+
+    // ========================================
+    // CREATE NOTIFICATIONS
+    // ========================================
+
+    const notifications =
+      await Promise.all(
+
+        filteredReceiverIds.map(
+
+          (receiverId) =>
+
+            Notification.create({
+
+              sender:
+                senderId,
+
+              receiver:
+                receiverId,
+
+              conversation:
+                conversationId,
+
+              message:
+                messageId,
+
+              isRead:
+                false,
+
+            })
+
+        )
+
+      );
+
+
+    console.log(
+
+      `${notifications.length} notification(s) created.`
+
+    );
+
+
+    return notifications;
+
+
+  } catch (error) {
+
+    console.error(
+
+      "Create message notifications error:",
+
+      error
+
+    );
+
+
+    // Return empty array instead of
+    // crashing the message flow.
+
+    return [];
+
+  }
+
+};
+
+
+// ==========================================
+// OPTIONAL: SINGLE NOTIFICATION FUNCTION
 // ==========================================
 
 const createNotification = async ({
@@ -14,60 +124,40 @@ const createNotification = async ({
 
   try {
 
-    // ========================================
-    // DON'T NOTIFY THE SENDER
-    // ========================================
-
-    // This is an extra safety check.
-    // The sender should never receive
-    // a notification for their own message.
+    // Don't notify sender
 
     if (
+
       senderId.toString() ===
       receiverId.toString()
-    ) {
 
-      console.log(
-        "Notification skipped: sender and receiver are the same user."
-      );
+    ) {
 
       return null;
 
     }
 
 
-    // ========================================
-    // CREATE NOTIFICATION
-    // ========================================
-
     const notification =
       await Notification.create({
 
-        // User who sent the message
-        sender: senderId,
+        sender:
+          senderId,
 
-        // User who should receive notification
-        receiver: receiverId,
+        receiver:
+          receiverId,
 
-        // Conversation where message was sent
-        conversation: conversationId,
+        conversation:
+          conversationId,
 
-        // Message that caused notification
-        message: messageId,
+        message:
+          messageId,
 
-        // New notification is unread
-        isRead: false,
+        isRead:
+          false,
 
       });
 
-
-    console.log(
-      "Notification created:",
-      notification._id
-    );
-
-
-    // Return notification
 
     return notification;
 
@@ -75,13 +165,13 @@ const createNotification = async ({
   } catch (error) {
 
     console.error(
+
       "Create notification error:",
+
       error
+
     );
 
-
-    // Return null instead of breaking
-    // the main message functionality.
 
     return null;
 
@@ -91,9 +181,13 @@ const createNotification = async ({
 
 
 // ==========================================
-// EXPORT SERVICE
+// EXPORT BOTH FUNCTIONS
 // ==========================================
 
 module.exports = {
+
+  createMessageNotifications,
+
   createNotification,
+
 };
